@@ -1,0 +1,105 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    background-image: url("../static/pics/chart.png");
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+
+.login {
+    width: 100%;
+    max-width: 500px;
+}
+
+.loginBord {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); 
+    border-radius: 32px;
+    padding: 48px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.3); 
+    transition: transform 0.3s ease;
+}
+
+.loginBord:hover {
+    transform: translateY(-4px);
+}
+
+.logintitle {
+    display: flex;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.loginbuttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.btnroles {
+    display: flex;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #1e293b;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.role-btn:hover {
+    border-color: #4f46e5;
+    background: #eef2ff;
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
+}
+.btn-text {
+    font-size: 1.25rem;
+}
+.customer-btn:hover {
+    border-color: #4f46e5;
+}
+
+.admin-btn:hover {
+    border-color: #7c3aed;
+}
+
+@media (max-width: 640px) {
+    .login-card {
+        padding: 32px 24px;
+    }
+    
+    .login-title {
+        font-size: 2rem;
+    }
+    
+    .btn-icon {
+        font-size: 1.75rem;
+        margin-right: 16px;
+    }
+    
+    .btn-text {
+        font-size: 1.1rem;
+    }
+}

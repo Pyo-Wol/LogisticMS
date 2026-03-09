@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Inventory & Order Management</title>
+    <link rel="stylesheet" href="../static/Styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>Products</h1>
+            <h2>Welcome, {{name.upper()}} !</h2>
+            <div class="user-area">
+                <a href="/loading?mode=loading&next=/user-page" class="user-button">User</a>
+                <span class="basket-count" id="basketCount">0</span>
+            </div>
+        </div>
+
+        <details class="custom-dropdown">
+            <summary class="dropdown-button">Jump to category</summary>
+            <div class="dropdown-menu">
+                <div><a href="#category-electronics">Electronics</a></div>
+                <div><a href="#category-clothing">Clothing</a></div>
+                <div><a href="#category-books">Books</a></div>
+            </div>
+        </details>
+
+        <section id="category-electronics" class="category-section">
+            <h2 id="e"> Electronics</h2>
+            <h2 id="Electronics"> .</h2>
+            <div class="product-grid">
+
+                <details class="product-card {% if stocks['Wireless Headphones'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="1" data-product-name="Wireless Headphones"
+                    data-product-price="{{ prices['Wireless Headphones'] }}"
+                    data-stock="{{ stocks['Wireless Headphones'] }}">
+                    <summary>
+                        <h3 class="wireless">.</h3>
+                        <h3 class="product-name">Wireless Headphones</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Wireless Headphones']) }}</p>
+                        <p class="product-stock {% if stocks['Wireless Headphones'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Wireless Headphones"] }}</p>
+                        {% if stocks['Wireless Headphones'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Wireless Headphones'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Smart Watch'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="2" data-product-name="Smart Watch"
+                    data-product-price="{{ prices['Smart Watch'] }}"
+                    data-stock="{{ stocks['Smart Watch'] }}">
+                    <summary>
+                        <h3 class="watch">.</h3>
+                        <h3 class="product-name">Smart Watch</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Smart Watch']) }}</p>
+                        <p class="product-stock {% if stocks['Smart Watch'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Smart Watch"] }}</p>
+                        {% if stocks['Smart Watch'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Smart Watch'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Bluetooth Speaker'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="3" data-product-name="Bluetooth Speaker"
+                    data-product-price="{{ prices['Bluetooth Speaker'] }}"
+                    data-stock="{{ stocks['Bluetooth Speaker'] }}">
+                    <summary>
+                        <h3 class="speaker">.</h3>
+                        <h3 class="product-name">Bluetooth Speaker</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Bluetooth Speaker']) }}</p>
+                        <p class="product-stock {% if stocks['Bluetooth Speaker'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Bluetooth Speaker"] }}</p>
+                        {% if stocks['Bluetooth Speaker'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Bluetooth Speaker'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['USB-C Hub'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="4" data-product-name="USB-C Hub"
+                    data-product-price="{{ prices['USB-C Hub'] }}"
+                    data-stock="{{ stocks['USB-C Hub'] }}">
+                    <summary>
+                        <h3 class="usb">.</h3>
+                        <h3 class="product-name">USB-C Hub</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['USB-C Hub']) }}</p>
+                        <p class="product-stock {% if stocks['USB-C Hub'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["USB-C Hub"] }}</p>
+                        {% if stocks['USB-C Hub'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['USB-C Hub'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+            </div>
+        </section>
+
+        <section id="category-clothing" class="category-section">
+            <h2 id="c">Clothing</h2>
+            <h2 id="Clothing"> .</h2>
+            <div class="product-grid">
+
+                <details class="product-card {% if stocks['Men T-Shirt'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="5" data-product-name="Men's T-Shirt (Cotton)"
+                    data-product-price="{{ prices['Men T-Shirt'] }}"
+                    data-stock="{{ stocks['Men T-Shirt'] }}">
+                    <summary>
+                        <h3 class="shirt">.</h3>
+                        <h3 class="product-name">Men's T-Shirt (Cotton)</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Men T-Shirt']) }}</p>
+                        <p class="product-stock {% if stocks['Men T-Shirt'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Men T-Shirt"] }}</p>
+                        {% if stocks['Men T-Shirt'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Men T-Shirt'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Womens Jeans'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="6" data-product-name="Women's Jeans"
+                    data-product-price="{{ prices['Womens Jeans'] }}"
+                    data-stock="{{ stocks['Womens Jeans'] }}">
+                    <summary>
+                        <h3 class="jeans">.</h3>
+                        <h3 class="product-name">Women's Jeans</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Womens Jeans']) }}</p>
+                        <p class="product-stock {% if stocks['Womens Jeans'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Womens Jeans"] }}</p>
+                        {% if stocks['Womens Jeans'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Womens Jeans'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Hoodie'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="7" data-product-name="Hoodie"
+                    data-product-price="{{ prices['Hoodie'] }}"
+                    data-stock="{{ stocks['Hoodie'] }}">
+                    <summary>
+                        <h3 class="hoodie">.</h3>
+                        <h3 class="product-name">Hoodie</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Hoodie']) }}</p>
+                        <p class="product-stock {% if stocks['Hoodie'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Hoodie"] }}</p>
+                        {% if stocks['Hoodie'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Hoodie'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+            </div>
+        </section>
+
+        <section id="category-books" class="category-section">
+            <h2 id="b">Books</h2>
+            <h2 id="Books"> .</h2>
+            <div class="product-grid">
+
+                <details class="product-card {% if stocks['The Lean Startup'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="8" data-product-name="The Lean Startup"
+                    data-product-price="{{ prices['The Lean Startup'] }}"
+                    data-stock="{{ stocks['The Lean Startup'] }}">
+                    <summary>
+                        <h3 class="lean">.</h3>
+                        <h3 class="product-name">"The Lean Startup"</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['The Lean Startup']) }}</p>
+                        <p class="product-stock {% if stocks['The Lean Startup'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["The Lean Startup"] }}</p>
+                        {% if stocks['The Lean Startup'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['The Lean Startup'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Clean Code'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="9" data-product-name="Clean Code"
+                    data-product-price="{{ prices['Clean Code'] }}"
+                    data-stock="{{ stocks['Clean Code'] }}">
+                    <summary>
+                        <h3 class="code">.</h3>
+                        <h3 class="product-name">"Clean Code"</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Clean Code']) }}</p>
+                        <p class="product-stock {% if stocks['Clean Code'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Clean Code"] }}</p>
+                        {% if stocks['Clean Code'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Clean Code'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+                <details class="product-card {% if stocks['Sapiens'] == 0 %}out-of-stock{% endif %}"
+                    data-product-id="10" data-product-name="Sapiens"
+                    data-product-price="{{ prices['Sapiens'] }}"
+                    data-stock="{{ stocks['Sapiens'] }}">
+                    <summary>
+                        <h3 class="sapiens">.</h3>
+                        <h3 class="product-name">"Sapiens"</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(prices['Sapiens']) }}</p>
+                        <p class="product-stock {% if stocks['Sapiens'] <= 5 %}low-stock{% endif %}">In stock: {{ stocks["Sapiens"] }}</p>
+                        {% if stocks['Sapiens'] == 0 %}<span class="out-of-stock-badge">Out of Stock</span>{% endif %}
+                    </summary>
+                    <div class="product-panel">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" min="1" max="{{ stocks['Sapiens'] }}" value="1" class="quantity-input">
+                        </div>
+                        <button class="add-to-basket">Add to basket</button>
+                    </div>
+                </details>
+
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function getBasket() { return JSON.parse(localStorage.getItem('basket')) || []; }
+
+        function saveBasket(basket) {
+            localStorage.setItem('basket', JSON.stringify(basket));
+            var total = 0;
+            getBasket().forEach(function(i) { total += i.quantity; });
+            document.getElementById('basketCount').textContent = total;
+        }
+
+        document.querySelectorAll('.product-card:not(.out-of-stock) .add-to-basket').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var card = this.closest('.product-card');
+                var qty  = parseInt(card.querySelector('.quantity-input').value, 10);
+                var basket = getBasket();
+                var existing = basket.find(function(i) { return i.id === card.dataset.productId; });
+                if (existing) { existing.quantity += qty; }
+                else { basket.push({ id: card.dataset.productId, name: card.dataset.productName, price: parseFloat(card.dataset.productPrice), quantity: qty }); }
+                saveBasket(basket);
+                card.removeAttribute('open');
+            });
+        });
+        (function() {
+            var total = 0;
+            getBasket().forEach(function(i) { total += i.quantity; });
+            document.getElementById('basketCount').textContent = total;
+        })();
+    </script>
+
+    <footer>
+        <p>contact: Batemanjoh0@gmail.com</p>
+        <p>@ copyright by Macjohn.B</p>
+    </footer>
+</body>
+</html>

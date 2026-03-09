@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User</title>
+    <link rel="stylesheet" href="../static/Styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>User Dashboard</h1>
+            <a href="{{ url_for('main') }}" class="user-button">← Back to Products</a>
+        </div>
+
+        <section class="category-section">
+            <h2>Your Basket</h2>
+            <ul class="basket-list-items" id="basketItems"></ul>
+            <div class="basket-total" id="basketTotal">Subtotal: kr0.00</div>
+            <div class="basket-total" id="basketShipping">Shipping: kr0.00</div>
+            <div class="basket-total" id="basketGrandTotal"><strong>Total: kr0.00</strong></div>
+            <button class="purchase-button" id="purchaseBtn">Purchase</button>
+        </section>
+
+        <section class="category-section">
+            <h2>Ongoing Orders</h2>
+            <div class="ongoing-orders">
+                {% if ongoing_orders %}
+                    {% for order in ongoing_orders %}
+                    <div class="order-card">
+                        <p><strong>Order #{{ order.id }}</strong> – {{ order.date }}
+                            <span class="order-status-badge status-{{ order.status | lower | replace(' ', '-') }}">{{ order.status }}</span>
+                        </p>
+                        <ul>
+                            {% for item in order.order_items %}
+                            <li>{{ item.name }} | {{ item.qty }}st | {{ '%.2f' % item.price }}kr</li>
+                            {% endfor %}
+                        </ul>
+                        <p>Total: {{ '%.2f' % order.total }}kr</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No ongoing orders.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2>Past Orders</h2>
+            <div class="past-orders">
+                {% if past_orders %}
+                    {% for order in past_orders %}
+                    <div class="order-card">
+                        <p><strong>Order ID #{{ order.id }}</strong> – {{ order.date }}
+                            <span class="order-status-badge status-{{ order.status | lower | replace(' ', '-') }}">{{ order.status }}</span>
+                        </p>
+                        <p>Items: {{ order.order_items|length }} | Total: {{ '%.2f' % order.total }}kr</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No past orders.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <div class="bottom-buttons">
+            <button class="logout" onclick="handleLogout()">Logout</button>
+            <button class="logout" onclick="handleDeleteAccount()">Delete Account</button>
+        </div>
+    </div>
+
+    <script>
+        const stocks  = { {% for pid, qty in stocks.items() %}'{{ pid }}': {{ qty }},{% endfor %} };
+        const weights = { {% for pid, w in weights.items() %}'{{ pid }}': {{ w }},{% endfor %} };
+        const carrier = { base_rate: {{ carrier.base_rate }}, rate_per_kg: {{ carrier.rate_per_kg }} };
+        function getBasket()        { return JSON.parse(localStorage.getItem('basket')) || []; }
+        function saveBasket(basket) { localStorage.setItem('basket', JSON.stringify(basket)); renderBasket(); }
+
+        function basketIdx(id) { return getBasket().findIndex(function(i) { return i.id === id; }); }
+        function changeQty(id, delta) {
+            var basket = getBasket();
+            var i = basketIdx(id);
+            if (i === -1) return;
+            basket[i].quantity += delta;
+            if (basket[i].quantity <= 0) basket.splice(i, 1);
+            saveBasket(basket);
+        }
+
+        function removeItem(id) {
+            saveBasket(getBasket().filter(function(i) { return i.id !== id; }));
+        }
+
+        function calcShipping(basket) {
+            var kg = basket.reduce(function(sum, i) { return sum + i.quantity * (weights[i.id] || 0); }, 0);
+            return carrier.base_rate + carrier.rate_per_kg * kg;
+        }
+        function renderBasket() {
+            var basket   = getBasket();
+            var list     = document.getElementById('basketItems');
+            var btn      = document.getElementById('purchaseBtn');
+            var subtotal = 0;
+            var hasUnavailable = false;
+
+            if (!basket.length) {
+                list.innerHTML = '<li class="empty-message">Your basket is empty just like your wallet</li>';
+                document.getElementById('basketTotal').textContent     = 'Subtotal: kr0.00';
+                document.getElementById('basketShipping').textContent  = 'Shipping: kr0.00';
+                document.getElementById('basketGrandTotal').innerHTML  = '<strong>Total: kr0.00</strong>';
+                btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+                return;
+            }
+
+            list.innerHTML = basket.map(function(item) {
+                var itemTotal   = item.price * item.quantity;
+                var unavailable = item.quantity > (stocks[item.id] || 0);
+                subtotal += itemTotal;
+                if (unavailable) hasUnavailable = true;
+
+                var controls = unavailable
+                    ? '<button onclick="removeItem(\'' + item.id + '\')">Remove</button>'
+                    : '<button onclick="changeQty(\'' + item.id + '\', -1)">−</button>'
+                    + '<button onclick="changeQty(\'' + item.id + '\', 1)">+</button>'
+                    + '<button onclick="removeItem(\'' + item.id + '\')">Remove</button>';
+
+                return '<li class="' + (unavailable ? 'unavailable-item' : '') + '">'
+                    + '<span>' + item.name + ' ( ' + item.quantity + ' st )</span>'
+                    + '<span>kr' + itemTotal.toFixed(2) + '</span>'
+                    + (unavailable ? '<span class="unavailable-label">Unavailable</span>' : '')
+                    + '<div class="quantity-controls">' + controls + '</div></li>';
+            }).join('');
+
+            var shipping = calcShipping(basket);
+            document.getElementById('basketTotal').textContent    = 'Subtotal: kr' + subtotal.toFixed(2);
+            document.getElementById('basketShipping').textContent = 'Shipping: kr' + shipping.toFixed(2);
+            document.getElementById('basketGrandTotal').innerHTML = '<strong>Total: kr' + (subtotal + shipping).toFixed(2) + '</strong>';
+            btn.disabled      = hasUnavailable;
+            btn.style.opacity = hasUnavailable ? '0.5' : '1';
+            btn.style.cursor  = hasUnavailable ? 'not-allowed' : 'pointer';
+        }
+        function handleLogout() {
+            saveBasket([]);
+            window.location.href = '/logout';
+        }
+        function handleDeleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                saveBasket([]);
+                window.location.href = '/delete-account';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderBasket();
+
+            document.getElementById('purchaseBtn').addEventListener('click', function() {
+                var basket = getBasket();
+                if (!basket.length) { alert('Your basket is empty'); return; }
+
+                fetch('/purchase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: basket, shipping_cost: calcShipping(basket) })
+                })
+                .then(function(r) {
+                    if (!r.ok) return r.json().then(function(d) { throw new Error(d.message); });
+                    return r.json();
+                })
+                .then(function() {
+                    saveBasket([]);
+                    window.location.href = '/loading?mode=purchase&next=/user-page';
+                })
+                .catch(function(err) { alert('Purchase failed: ' + err.message); });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin-page</title>
+    <link rel="stylesheet" href="../static/admin.css">
+</head>
+<body>
+    <div class="floating-dots"></div>
+    <div class="container">
+        <div class="controls">
+            <div class="header">
+                <img src="../static/pics/logo.png" alt="Logo" class="logo">
+                <h1 class="heading">Admin Dashboard</h1>
+            </div>
+            <a href="/loading?mode=loading&next=/logout" class="user-button">← Logout</a>
+        </div>
+        <div class="category-section">
+            <h2 id="restock">Need Restock</h2>
+            <div class="restock-grid">
+                {% if stock_level %}
+                    {% for product in stock_level %}
+                    <div class="category-section" data-product-id="{{ product.Product_ID }}">
+                        <h3 class="product-name">{{ product.P_name }}</h3>
+                        <p class="product-price">kr{{ "%.2f"|format(product.Price) }}</p>
+                        <div class="product-stock">
+                            <p class="{% if product.Stock_quantity <= 5 %}low-stock{% endif %}">
+                                In stock: {{ product.Stock_quantity }}
+                            </p>
+                        </div>
+                        <form method="POST" class="restock-form">
+                            <input type="hidden" name="product_id" value="{{ product.Product_ID }}">
+                            <input type="number" name="quantity" value="1" min="1" max="100" class="restock-input">
+                            <button type="submit" class="restock-btn">Restock</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">All products are well stocked!</p>
+                {% endif %}
+            </div>
+        </div>
+        <h1 class="headcharts">Carrier(Shipping)</h1>
+        <div class="carrier-grid">
+            {% set carrier_order = [2, 672, 101] %}
+            {% for cid in carrier_order %}
+            {% set c = carriers_data[cid] %}
+            <div class="carrier-panel">
+                <div class="carrier-header">
+                    <span class="carrier-flag">{{ c.flag }}</span>
+                    <div>
+                        <h2 class="carrier-name">{{ c.name }}</h2>
+                        <p class="carrier-countries">{{ c.countries }}</p>
+                    </div>
+                </div>
+                {% if c.shipments %}
+                    {% for sid, shipment in c.shipments.items() %}
+                    <div class="shipment-card status-{{ shipment.status | lower | replace(' ', '-') }}">
+                        <div class="shipment-header">
+                            <span class="shipment-id">Shipment #{{ shipment.id }}</span>
+                            <span class="shipment-date">{{ shipment.date }}</span>
+                            <span class="shipment-tracking">#{{ shipment.tracking }}</span>
+                            <span class="shipment-cost">kr{{ '%.2f'|format(shipment.cost) }}</span>
+                            <span class="shipment-badge badge-{{ shipment.status | lower | replace(' ', '-') }}">
+                                {{ shipment.status }}
+                            </span>
+                        </div>
+
+                        <div class="shipment-orders">
+                            {% for order in shipment.orders %}
+                            <div class="shipment-order-row">
+                                <span class="order-customer">USER: {{ order.customer }}</span>
+                                <span class="order-id">Order #{{ order.id }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="shipment-actions">
+                            <form method="POST" action="/admin/shipment-status" style="display:inline">
+                                <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                                <input type="hidden" name="status" value="Preparing">
+                                <button type="submit"
+                                    class="status-btn btn-preparing {% if shipment.status == 'Preparing' %}active{% endif %}"
+                                    {% if shipment.status =='Preparing' %}disabled{% endif %}>
+                                    Preparing
+                                </button>
+                            </form>
+                            <form method="POST" action="/admin/shipment-status" style="display:inline">
+                                <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                                <input type="hidden" name="status" value="In-Transit">
+                                <button type="submit"
+                                    class="status-btn btn-transit {% if shipment.status == 'In-Transit' %}active{% endif %}"
+                                    {% if shipment.status == 'In-Transit' %}disabled{% endif %}>
+                                    In-Transit
+                                </button>
+                            </form>
+                            <form method="POST" action="/admin/shipment-status" style="display:inline"
+                                class="delivered-form">
+                                <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                                <input type="hidden" name="status" value="Delivered">
+                                <button type="submit"
+                                    class="status-btn btn-delivered {% if shipment.status == 'Delivered' %}active{% endif %}"
+                                    {% if shipment.status == 'Delivered' %}disabled{% endif %}>
+                                    Delivered
+                                </button>
+                            </form>
+                        </div>
+                        <div class="countdown-banner" style="display:none;">
+                            <span class="countdown-text">Removing in <strong class="countdown-num">15</strong>s…</span>
+                            <button class="undo-btn" type="button">↩ Undo</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-shipments">No active shipments</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <h1 class="headcharts">Charts</h1>
+
+        <div class="stats">
+            <div class="profit">
+                <h2>Profits:</h2>
+                <h1>{{ "%.2f"|format(total_profit) }} kr</h1>
+                <h2 class="prof">+{{ "%.2f"|format(total_revenue) }} kr</h2>
+            </div>
+            <div class="new-costumer">
+                <h2>Nr Signup:</h2>
+                <h1>{{ new_customers }}👤</h1>
+            </div>
+        </div>
+
+        {% for category, products in category_charts.items() %}
+        <h2>{{ category }}</h2>
+        <div class="chart">
+            {% for p in products %}
+            <div class="bar" style="height: {{ p.pct }}%;"><span>{{ p.name }} ({{ p.sold }})</span></div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <h2>Most Viewed Category</h2>
+        <div class="chart-container">
+            <div class="pie-chart" style="background: conic-gradient({{ pie_gradient }});"></div>
+            <div class="category">
+                {% for item in pie_legend %}
+                <div class="cat">
+                    <div class="color-box" style="background: {{ item.color }};"></div>
+                    {{ item.category }} - {{ item.percent }}%
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function postStatus(shipmentId, status) {
+            var f = document.createElement('form');
+            f.method = 'POST';
+            f.action = '/admin/shipment-status';
+            f.innerHTML = '<input type="hidden" name="shipment_id" value="' + shipmentId + '">'
+                        + '<input type="hidden" name="status" value="' + status + '">';
+            document.body.appendChild(f);
+            f.submit();
+        }
+
+        function startDeliveredCountdown(form) {
+            var card       = form.closest('.shipment-card');
+            var banner     = card.querySelector('.countdown-banner');
+            var numEl      = card.querySelector('.countdown-num');
+            var undoBtn    = card.querySelector('.undo-btn');
+            var shipmentId = form.querySelector('[name="shipment_id"]').value;
+            var secs       = 15;
+            var cancelled  = false;
+
+            card.querySelectorAll('.status-btn').forEach(function(b) { b.disabled = true; });
+            banner.style.display = 'flex';
+            numEl.textContent = secs;
+
+            var ticker = setInterval(function() {
+                secs--;
+                numEl.textContent = secs;
+                if (secs <= 0 && !cancelled) {
+                    clearInterval(ticker);
+                    card.style.transition = 'opacity 0.5s, max-height 0.5s';
+                    card.style.opacity    = '0';
+                    card.style.maxHeight  = '0';
+                    card.style.overflow   = 'hidden';
+                    form.submit();
+                }
+            }, 1000);
+
+            undoBtn.addEventListener('click', function() {
+                cancelled = true;
+                clearInterval(ticker);
+                banner.style.display = 'none';
+                card.querySelectorAll('.status-btn').forEach(function(b) { b.disabled = false; });
+                postStatus(shipmentId, 'In-Transit');
+            }, { once: true });
+        }
+
+        document.querySelectorAll('.delivered-form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                var btn = form.querySelector('.btn-delivered');
+                if (btn && btn.disabled) return;
+                e.preventDefault();
+                startDeliveredCountdown(form);
+            });
+        });
+    </script>
+</body>
+</html>
