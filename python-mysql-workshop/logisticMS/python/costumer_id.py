@@ -21,5 +21,8 @@ def generate_unique_customer_id():
 def generate_unique_order_id():
     return _generate_id("c_order", "Order_ID", 10000, 99999)
 
+def generate_unique_order_item_id():
+    return _generate_id("order_item", "Order_Item_ID", 1000000, 9999999)
+
 def generate_unique_shipment_id():
     return _generate_id("shipment", "Shipment_ID", 1000, 9999)
