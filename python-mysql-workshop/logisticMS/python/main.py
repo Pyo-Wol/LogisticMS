@@ -101,6 +101,7 @@ def main():
         stocks[row["P_name"]] = row["Stock_quantity"]
         prices[row["P_name"]] = row["Price"]
     return render_template('index.html', data=result, stocks=stocks, prices=prices, name=session['name'])
+
 @app.route('/user-page', methods=['GET', 'POST'])
 def user():
     if not session.get('loggedin'):
@@ -387,11 +388,12 @@ def purchase():
             if not stock or stock[0] < item['quantity']:
                 return {"message": "Insufficient stock for product " + str(item['id'])}, 400
 
-        cursor.execute("INSERT INTO c_order (Customer_ID, Order_ID) VALUES (%s, %s)", (session['id'], order_id))
+        cursor.execute("INSERT INTO c_order (Customer_ID, Order_ID, Order_status) VALUES (%s, %s, %s)", (session['id'], order_id, 'Pending'))
         for item in basket:
+            order_item_id = costumer_id.generate_unique_order_item_id()
             cursor.execute(
-                "INSERT INTO order_item (Order_ID, Product_ID, Quantity, Unit_price) VALUES (%s, %s, %s, %s)",
-                (order_id, item['id'], item['quantity'], item['price'])
+                "INSERT INTO order_item (Order_item_id, Order_ID, Product_ID, Quantity, Unit_price) VALUES (%s, %s, %s, %s, %s)",
+                (order_item_id, order_id, item['id'], item['quantity'], item['price'])
             )
             cursor.execute(
                 "UPDATE product SET Stock_quantity = Stock_quantity - %s WHERE Product_ID = %s",
@@ -434,7 +436,7 @@ def purchase():
                     (shipment_id, order_id, carrier_id, tracking_number, float(shipping_cost))
                 )
             cursor.execute(
-                "UPDATE c_order SET Shipment_ID = %s WHERE Order_ID = %s",
+                "UPDATE c_order SET Shipment_ID = %s, Order_status = 'Preparing' WHERE Order_ID = %s",
                 (shipment_id, order_id)
             )
         conn.commit()
