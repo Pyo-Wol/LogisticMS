@@ -35,13 +35,12 @@ create table Product(
 create table C_Order(
     Order_ID INTEGER,
     Customer_ID INTEGER,
-    Shipment_ID	INTEGER NULL,
-    Order_status VARCHAR(50),
+    Shipment_ID INTEGER NULL,
+    Order_status VARCHAR(50) DEFAULT 'Pending',
     Total_amount DECIMAL(10,2),
-    Order_date date default current_timestamp,
+    Order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     primary key(Order_ID),
-    foreign key(Customer_ID) references Customer(Customer_ID),
-    foreign KEY (Shipment_ID) REFERENCES Shipment(Shipment_ID)
+    foreign key(Customer_ID) references Customer(Customer_ID)
 );
 
 create table Order_Item(
@@ -66,9 +65,16 @@ create table Shipment (
     Shipment_status VARCHAR(50),
     Shipping_cost DECIMAL(10,2),
     primary key(Shipment_ID),
-    foreign key(Order_ID) references C_Order(Order_ID),
     foreign key(Carrier_ID) references Carrier(Carrier_ID)
 );
+ALTER TABLE C_Order
+ADD CONSTRAINT fk_order_shipment
+FOREIGN KEY (Shipment_ID) REFERENCES Shipment(Shipment_ID);
+
+ALTER TABLE Shipment
+ADD CONSTRAINT fk_shipment_order
+FOREIGN KEY (Order_ID) REFERENCES C_Order(Order_ID);
+
 insert into product(Product_ID,P_name,Category,Price,Stock_quantity,Weight_kg) values
 (001,'Wireless Headphones', 'Electronics', 899.99,24,0.255),
 (002,'Smart Watch', 'Electronics', 1232.99,3,0.100),
