@@ -448,7 +448,6 @@ def purchase():
         cursor.close()
         conn.close()
 
-
 @app.route('/delete-account', methods=['POST', 'GET'])
 def delete_account():
     if not session.get('loggedin'):
@@ -457,18 +456,18 @@ def delete_account():
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM order_item WHERE Order_ID IN (SELECT Order_ID FROM c_order WHERE Customer_ID = %s)", (session['id'],))
+        cursor.execute("UPDATE c_order SET Shipment_ID = NULL WHERE Customer_ID = %s", (session['id'],))
+        cursor.execute("DELETE FROM shipment WHERE Order_ID IN (SELECT Order_ID FROM c_order WHERE Customer_ID = %s)", (session['id'],))
         cursor.execute("DELETE FROM c_order WHERE Customer_ID = %s", (session['id'],))
         cursor.execute("DELETE FROM customer WHERE Customer_ID = %s", (session['id'],))
         conn.commit()
         session.clear()
         return redirect('/')
-    except Exception as e:
+    except Exception as error:
         conn.rollback()
-        return {"message": "Database error: " + str(e)}, 500
+        return {"message": "Database error: " + str(error)}, 500
     finally:
         cursor.close()
         conn.close()
-
-
 if __name__ == '__main__':
     app.run(debug=True)
