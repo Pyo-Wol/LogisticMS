@@ -34,9 +34,21 @@
             <label for="password">Password</label>
         </div>
         <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input type="address" name="address" id="address" placeholder="address" required>
-            <label for="address">country</label>
+            <p class="Ctry">Country</p>
+            <i class="fas fa-map-marker-alt"></i>
+            <select name="address" id="address" required>
+                <option value="" disabled selected>Select your country</option>
+                <option value="SWEDEN">SWEDEN</option>
+                <option value="NORWAY">NORWAY</option>
+                <option value="DENMARK">DENMARK</option>
+                <option value="MEXICO">MEXICO</option>
+                <option value="CANADA">CANADA</option>
+                <option value="USA">USA</option>
+                <option value="NIGERIA">NIGERIA</option>
+                <option value="SOUTH AFRICA">SOUTH AFRICA</option>
+                <option value="EGYPT">EGYPT</option>
+            </select>
+            
         </div>
         <input type="submit" class="btn" value="Sign Up" name="signUp">
         </form>
