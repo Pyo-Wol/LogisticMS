@@ -333,19 +333,35 @@ def update_shipment_status():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
+        "SELECT Shipment_status FROM shipment WHERE Shipment_ID = %s",
+        (shipment_id,)
+    )
+    current_status = cursor.fetchone()
+    if current_status and current_status[0] == 'Delivered':
+        cursor.close()
+        conn.close()
+        return redirect(url_for('admin'))
+
+    cursor.execute(
         "UPDATE shipment SET Shipment_status = %s WHERE Shipment_ID = %s",
         (new_status, shipment_id)
     )
-    if new_status == 'Delivered':
+    if new_status == 'Preparing':
         cursor.execute(
-            "UPDATE c_order SET Order_status = 'Delivered' "
+            "UPDATE c_order SET Order_status = 'Preparing' "
             "WHERE Shipment_ID = %s",
             (shipment_id,)
         )
-    if new_status == 'In-Transit':
+    elif new_status == 'In-Transit':
         cursor.execute(
             "UPDATE c_order SET Order_status = 'In-Transit' "
-            "WHERE Shipment_ID = %s AND Order_status = 'Delivered'",
+            "WHERE Shipment_ID = %s",
+            (shipment_id,)
+        )
+    elif new_status == 'Delivered':
+        cursor.execute(
+            "UPDATE c_order SET Order_status = 'Delivered' "
+            "WHERE Shipment_ID = %s",
             (shipment_id,)
         )
     conn.commit()
