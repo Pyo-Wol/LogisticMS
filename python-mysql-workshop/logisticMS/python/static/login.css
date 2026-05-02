@@ -26,14 +26,26 @@ form{
     padding:1.3rem;
     margin-bottom:0.4rem;
 }
-input{
-    color:inherit;
-    width:100%;
-    background-color:transparent;
-    border:none;
-    border-bottom:1px solid #757575;
-    padding-left:1.5rem;
-    font-size:15px;
+input,
+select {
+    color: inherit;
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #757575;
+    padding-left: 1.5rem;
+    font-size: 15px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+select option {
+    background: #fff;
+    color: #000;
+}
+.Ctry{
+    position:relative;
+    margin: 1rem 0;
 }
 .input-group{
     padding:1% 0;
@@ -135,4 +147,3 @@ button:hover{
     text-decoration:underline;
     color:blue;
 }
-
