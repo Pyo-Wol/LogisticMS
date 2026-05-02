@@ -249,9 +249,9 @@ def admin():
         else:
             pie_gradient = colors[-1] + " 0% 100%"
         carriers_data = {
-            2: {'name': 'Scandinavia', 'countries': 'Sweden · Norway · Denmark', 'shipments': {}},
-            672: {'name': 'Americas', 'countries': 'USA · Mexico · Canada', 'shipments': {}},
-            101: {'name': 'Africa','countries': 'Nigeria · South Africa · Egypt', 'shipments': {}},
+            2: {'name': 'Unville Croft', 'countries': 'Sweden · Norway · Denmark', 'shipments': {}},
+            672: {'name': 'Hellsborn', 'countries': 'USA · Mexico · Canada', 'shipments': {}},
+            101: {'name': 'Frieght Dorman','countries': 'Nigeria · South Africa · Egypt', 'shipments': {}},
         }
         cursor.execute(
             "SELECT s.Shipment_ID, s.Carrier_ID, s.Shipment_status, s.Ship_date, "
@@ -448,6 +448,7 @@ def purchase():
         cursor.close()
         conn.close()
 
+
 @app.route('/delete-account', methods=['POST', 'GET'])
 def delete_account():
     if not session.get('loggedin'):
@@ -469,5 +470,7 @@ def delete_account():
     finally:
         cursor.close()
         conn.close()
+
+
 if __name__ == '__main__':
     app.run(debug=True)
