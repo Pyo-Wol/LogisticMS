@@ -82,7 +82,7 @@
                                 <input type="hidden" name="status" value="Preparing">
                                 <button type="submit"
                                     class="status-btn btn-preparing {% if shipment.status == 'Preparing' %}active{% endif %}"
-                                    {% if shipment.status =='Preparing' %}disabled{% endif %}>
+                                    {% if shipment.status == 'Preparing' or shipment.status == 'Delivered' %}disabled{% endif %}>
                                     Preparing
                                 </button>
                             </form>
@@ -91,7 +91,7 @@
                                 <input type="hidden" name="status" value="In-Transit">
                                 <button type="submit"
                                     class="status-btn btn-transit {% if shipment.status == 'In-Transit' %}active{% endif %}"
-                                    {% if shipment.status == 'In-Transit' %}disabled{% endif %}>
+                                    {% if shipment.status == 'In-Transit' or shipment.status == 'Delivered' %}disabled{% endif %}>
                                     In-Transit
                                 </button>
                             </form>
