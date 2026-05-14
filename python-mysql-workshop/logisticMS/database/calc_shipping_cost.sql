@@ -51,7 +51,7 @@ BEGIN
         WHEN 'DENMARK' THEN 2
         WHEN 'USA' THEN 672
         WHEN 'MEXICO' THEN 672
-        WHEN 'CANADA'  THEN 672
+        WHEN 'CANADA' THEN 672
         WHEN 'NIGERIA' THEN 101
         WHEN 'SOUTH AFRICA' THEN 101
         WHEN 'EGYPT' THEN 101
@@ -62,9 +62,9 @@ BEGIN
     END IF;
 
     SELECT COALESCE(rate_per_kg, 0)
-    INTO   v_rate_per_kg
-    FROM   carrier
-    WHERE  Carrier_ID = v_carrier_id
+    INTO v_rate_per_kg
+    FROM carrier
+    WHERE Carrier_ID = v_carrier_id
     LIMIT  1;
 
     RETURN v_rate_per_kg;

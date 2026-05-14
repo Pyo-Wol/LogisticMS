@@ -1,5 +1,4 @@
 import os
-import costumer_id
 from datetime import date
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, session, url_for
@@ -72,11 +71,10 @@ def signup():
         elif not name or not password:
             msg = "Please fill all fields"
         else:
-            customer_id = costumer_id.generate_unique_customer_id()
             cursor.execute(
-                "INSERT INTO customer (Customer_ID, Fname, Email, Created_date, loginPassword, address) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
-                (customer_id, name, email, today_date, password, address)
+                "INSERT INTO customer (Fname, Email, Created_date, loginPassword, address) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                (name, email, today_date, password, address)
             )
             conn.commit()
             msg = "Account created successfully"
@@ -390,11 +388,6 @@ def purchase():
     if not basket:
         return {"message": "Empty basket"}, 400
 
-    try:
-        order_id = costumer_id.generate_unique_order_id()
-    except Exception as e:
-        return {"message": "Failed to generate order ID: " + str(e)}, 500
-
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -404,12 +397,12 @@ def purchase():
             if not stock or stock[0] < item['quantity']:
                 return {"message": "Insufficient stock for product " + str(item['id'])}, 400
 
-        cursor.execute("INSERT INTO c_order (Customer_ID, Order_ID, Order_status) VALUES (%s, %s, %s)", (session['id'], order_id, 'Pending'))
+        cursor.execute("INSERT INTO c_order (Customer_ID, Order_status) VALUES (%s, %s)", (session['id'], 'Pending'))
+        order_id = cursor.lastrowid
         for item in basket:
-            order_item_id = costumer_id.generate_unique_order_item_id()
             cursor.execute(
-                "INSERT INTO order_item (Order_item_id, Order_ID, Product_ID, Quantity, Unit_price) VALUES (%s, %s, %s, %s, %s)",
-                (order_item_id, order_id, item['id'], item['quantity'], item['price'])
+                "INSERT INTO order_item (Order_ID, Product_ID, Quantity, Unit_price) VALUES (%s, %s, %s, %s)",
+                (order_id, item['id'], item['quantity'], item['price'])
             )
             cursor.execute(
                 "UPDATE product SET Stock_quantity = Stock_quantity - %s WHERE Product_ID = %s",
@@ -442,15 +435,14 @@ def purchase():
             if existing:
                 shipment_id = existing[0]
             else:
-                shipment_id = costumer_id.generate_unique_shipment_id()
-                tracking_number = costumer_id.generate_unique_shipment_id()
+                tracking_number = os.urandom(6).hex().upper()
                 cursor.execute(
                     "INSERT INTO shipment "
-                    "(Shipment_ID, Order_ID, Carrier_ID, Tracking_number, "
-                    " Ship_date, Shipment_status, Shipping_cost) "
-                    "VALUES (%s, %s, %s, %s, CURDATE(), 'Preparing', %s)",
-                    (shipment_id, order_id, carrier_id, tracking_number, float(shipping_cost))
+                    "(Carrier_ID, Tracking_number, Ship_date, Shipment_status, Shipping_cost) "
+                    "VALUES (%s, %s, CURDATE(), 'Preparing', %s)",
+                    (carrier_id, tracking_number, float(shipping_cost))
                 )
+                shipment_id = cursor.lastrowid
             cursor.execute(
                 "UPDATE c_order SET Shipment_ID = %s, Order_status = 'Preparing' WHERE Order_ID = %s",
                 (shipment_id, order_id)
@@ -474,7 +466,6 @@ def delete_account():
     try:
         cursor.execute("DELETE FROM order_item WHERE Order_ID IN (SELECT Order_ID FROM c_order WHERE Customer_ID = %s)", (session['id'],))
         cursor.execute("UPDATE c_order SET Shipment_ID = NULL WHERE Customer_ID = %s", (session['id'],))
-        cursor.execute("DELETE FROM shipment WHERE Order_ID IN (SELECT Order_ID FROM c_order WHERE Customer_ID = %s)", (session['id'],))
         cursor.execute("DELETE FROM c_order WHERE Customer_ID = %s", (session['id'],))
         cursor.execute("DELETE FROM customer WHERE Customer_ID = %s", (session['id'],))
         conn.commit()
