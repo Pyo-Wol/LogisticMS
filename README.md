@@ -2,9 +2,7 @@
 
 Final Project Report (solo project)
 
-**By:** Bate Macjohn Bate Manjoh - bamn25@student.bth.se
-**Course:** DV 1703 (Databasteknik)
-**Submitted:** 2026-05-14
+**By:** Bate Macjohn Bate Manjoh
 
 ## Introduction
 
