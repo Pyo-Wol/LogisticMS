@@ -247,9 +247,3 @@ Set up:
 3. Run the `Create_Database_Tables.sql` script to create database and tables
 4. Run `calc_shipping.sql` script to create the functions and trigger
 5. Start the app with `python main.py` and it will show in `https://localhost:5000`
-
-## Source code
-
-GitHub repo - [Pyo-Wol/LogisticMS: a database(Mysql) project](https://github.com/Pyo-Wol/LogisticMS)
-
-YouTube video - Inv & Order MS
