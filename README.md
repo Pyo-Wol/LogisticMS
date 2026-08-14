@@ -76,7 +76,7 @@ Order item refers to the Product. A many to one relationship, meaning many order
 
 **The Diagram:**
 
-![ER Diagram](images/er-diagram.png)
+<img width="932" height="766" alt="er-diagram" src="https://github.com/user-attachments/assets/9e8e1fb0-4ee6-4355-9541-1908fdecf41e" />
 
 # SQL Queries
 
