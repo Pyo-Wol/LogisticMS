@@ -1,152 +1,182 @@
-* {
-	border: 0;
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
+@import url('https://fonts.googleapis.com/css2?family=Concert+One&display=swap');
+
+*{border:0;box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+    --paper:#F4F1EA;
+    --ink:#16150F;
+    --muted:#7B7466;
+    --rule:rgba(22,21,15,.14);
+    --primary:#A64B2A;
+    --trans-dur:.4s;
+    --serif:"Concert One",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    --sans:"Concert One",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    font-size:calc(16px + (20 - 16) * (100vw - 320px) / (1280 - 320));
 }
-:root {
-	--hue: 223;
-	--bg: hsl(var(--hue),10%,90%);
-	--fg: hsl(var(--hue),10%,10%);
-	--primary: hsl(var(--hue),90%,55%);
-	--trans-dur: 0.3s;
-	font-size: calc(16px + (20 - 16) * (100vw - 320px) / (1280 - 320));
+
+body{
+    background-color:var(--paper);
+    background-image:url("../static/pics/bg-paper.jpg");
+    background-size:cover;
+    background-position:center;
+    color:var(--ink);
+    font:1em/1.5 var(--sans);
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    transition:background-color var(--trans-dur),color var(--trans-dur);
 }
-body {
-	background-color: var(--bg);
-	color: var(--fg);
-	font: 1em/1.5 "DM Sans", sans-serif;
-	height: 100vh;
-	display: grid;
-	place-items: center;
-	transition:
-		background-color var(--trans-dur),
-		color var(--trans-dur);
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:-10%;
+    background-image:url("../static/pics/tex-contour.webp");
+    background-size:cover;
+    background-position:center;
+    opacity:.26;
+    pointer-events:none;
+    animation:mapCreep 24s ease-in-out infinite alternate;
 }
-.preloader {
-	text-align: center;
-	max-width: 20em;
-	width: 100%;
+
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:url("../static/pics/tex-grain.webp");
+    background-size:400px 400px;
+    opacity:.5;
+    mix-blend-mode:multiply;
+    pointer-events:none;
 }
-.preloader__text {
-	position: relative;
-	height: 1.5em;
+
+@keyframes mapCreep{
+    from{transform:scale(1.05) translate3d(0,0,0);}
+    to{transform:scale(1.18) translate3d(-2%,2%,0);}
 }
-.preloader__msg {
-	animation: msg 0.3s 13.7s linear forwards;
-	position: absolute;
-	width: 100%;
+
+.preloader{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    max-width:26em;
+    width:100%;
+    padding:0 1.5em;
 }
-.preloader__msg--last {
-	animation-direction: reverse;
-	animation-delay: 14s;
-	visibility: hidden;
+
+.preloader::before{
+    content:"LOGISTIC MS";
+    display:block;
+    font-size:.56rem;
+    letter-spacing:.44em;
+    text-transform:uppercase;
+    color:var(--primary);
+    margin-bottom:2.4em;
 }
-.cart {
-	display: block;
-	margin: 0 auto 1.5em auto;
-	width: 8em;
-	height: 8em;
+
+.preloader__text{position:relative;height:2.4em;margin-top:.6em;}
+
+.preloader__msg{
+    animation:msg .3s 13.7s linear forwards;
+    position:absolute;
+    width:100%;
+    left:0;
+    font-family:var(--serif);
+    font-weight:300;
+    font-size:1.35rem;
+    letter-spacing:-.02em;
+    color:var(--ink);
 }
+
+.preloader__msg--last{
+    animation-direction:reverse;
+    animation-delay:14s;
+    visibility:hidden;
+    font-style:normal;
+    color:var(--muted);
+    font-size:1.1rem;
+}
+
+.preloader::after{
+    content:"";
+    display:block;
+    height:1px;
+    width:100%;
+    margin-top:2.2em;
+    background:var(--rule);
+    position:relative;
+    overflow:hidden;
+}
+
+.cart{
+    display:block;
+    margin:0 auto 1.4em auto;
+    width:8.5em;
+    height:8.5em;
+}
+
 .cart__lines,
 .cart__top,
 .cart__wheel1,
 .cart__wheel2,
-.cart__wheel-stroke {
-	animation: cartLines 2s ease-in-out infinite;
-}
-.cart__lines {
-	stroke: var(--primary);
-}
-.cart__top {
-	animation-name: cartTop;
-}
-.cart__wheel1 {
-	animation-name: cartWheel1;
-	transform: rotate(-0.25turn);
-	transform-origin: 43px 111px;
-}
-.cart__wheel2 {
-	animation-name: cartWheel2;
-	transform: rotate(0.25turn);
-	transform-origin: 102px 111px;
-}
-.cart__wheel-stroke {
-	animation-name: cartWheelStroke
-}
-.cart__track {
-	stroke: hsla(var(--hue),10%,10%,0.1);
-	transition: stroke var(--trans-dur);
+.cart__wheel-stroke{animation:cartLines 2s ease-in-out infinite;}
+
+.cart__lines{stroke:var(--primary);}
+.cart__top{animation-name:cartTop;}
+
+.cart__wheel1{
+    animation-name:cartWheel1;
+    transform:rotate(-.25turn);
+    transform-origin:43px 111px;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--bg: hsl(var(--hue),10%,10%);
-		--fg: hsl(var(--hue),10%,90%);
-	}
-	.cart__track {
-		stroke: hsla(var(--hue),10%,90%,0.1);
-	}
+.cart__wheel2{
+    animation-name:cartWheel2;
+    transform:rotate(.25turn);
+    transform-origin:102px 111px;
 }
 
+.cart__wheel-stroke{animation-name:cartWheelStroke;}
 
-@keyframes msg {
-	from {
-		opacity: 1;
-		visibility: visible;
-	}
-	99.9% {
-		opacity: 0;
-		visibility: visible;
-	}
-	to {
-		opacity: 0;
-		visibility: hidden;
-	}
+.cart__track{
+    stroke:rgba(22,21,15,.10);
+    transition:stroke var(--trans-dur);
 }
-@keyframes cartLines {
-	from,
-	to {
-		opacity: 0;
-	}
-	8%,
-	92% {
-		opacity: 1;
-	}
+
+@keyframes msg{
+    from{opacity:1;visibility:visible;}
+    99.9%{opacity:0;visibility:visible;}
+    to{opacity:0;visibility:hidden;}
 }
-@keyframes cartTop {
-	from {
-		stroke-dashoffset: -338;
-	}
-	50% {
-		stroke-dashoffset: 0;
-	}
-	to {
-		stroke-dashoffset: 338;
-	}
+
+@keyframes cartLines{
+    from,to{opacity:0;}
+    8%,92%{opacity:1;}
 }
-@keyframes cartWheel1 {
-	from {
-		transform: rotate(-0.25turn);
-	}
-	to {
-		transform: rotate(2.75turn);
-	}
+
+@keyframes cartTop{
+    from{stroke-dashoffset:-338;}
+    50%{stroke-dashoffset:0;}
+    to{stroke-dashoffset:338;}
 }
-@keyframes cartWheel2 {
-	from {
-		transform: rotate(0.25turn);
-	}
-	to {
-		transform: rotate(3.25turn);
-	}
+
+@keyframes cartWheel1{
+    from{transform:rotate(-.25turn);}
+    to{transform:rotate(2.75turn);}
 }
-@keyframes cartWheelStroke {
-	from,
-	to {
-		stroke-dashoffset: 81.68;
-	}
-	50% {
-		stroke-dashoffset: 40.84;
-	}
+
+@keyframes cartWheel2{
+    from{transform:rotate(.25turn);}
+    to{transform:rotate(3.25turn);}
+}
+
+@keyframes cartWheelStroke{
+    from,to{stroke-dashoffset:81.68;}
+    50%{stroke-dashoffset:40.84;}
+}
+
+@media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;}
 }

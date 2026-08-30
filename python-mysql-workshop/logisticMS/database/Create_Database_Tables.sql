@@ -1,75 +1,87 @@
+Drop database if exists Logistic_MS;
 CREATE DATABASE IF NOT EXISTS Logistic_MS;
 USE Logistic_MS;
 
-CREATE TABLE Carrier (
-    Carrier_ID INTEGER AUTO_INCREMENT,
-    Carrier_Name VARCHAR(100),
+CREATE TABLE carrier (
+    Carrier_ID INTEGER Not NULL AUTO_INCREMENT,
+    Carrier_Name VARCHAR(100) Not NULL,
     Contact_info VARCHAR(255),
-    Base_rate DECIMAL(10,2),
-    Rate_per_kg DECIMAL(10,2),
-    PRIMARY KEY (Carrier_ID)
+    Base_rate DECIMAL(10,2) Not NULL DEFAULT 0.00,
+    Rate_per_kg DECIMAL(10,2) Not NULL DEFAULT 0.00,
+    PRIMARY KEY (Carrier_ID),
+    CONSTRAINT chk_carrier_rates CHECK (Base_rate >= 0 AND Rate_per_kg >= 0)
 );
 
-CREATE TABLE Customer (
-    Customer_ID INTEGER AUTO_INCREMENT,
-    Fname VARCHAR(100),
-    Email VARCHAR(255),
-    Address VARCHAR(255),
-    Created_date DATE,
-    loginPassword VARCHAR(100),
-    PRIMARY KEY (Customer_ID)
+CREATE TABLE customer (
+    Customer_ID INTEGER Not NULL AUTO_INCREMENT,
+    Fname VARCHAR(100) Not NULL,
+    Email VARCHAR(255) Not NULL,
+    Address VARCHAR(255) Not NULL,
+    Created_date DATE Not NULL,
+    loginPassword VARCHAR(100) Not NULL,
+    PRIMARY KEY (Customer_ID),
+    UNIQUE KEY uq_customer_email (Email)
 );
 
-CREATE TABLE Product (
-    Product_ID INTEGER AUTO_INCREMENT,
-    P_name VARCHAR(100),
-    Category VARCHAR(100),
-    Price DECIMAL(10,2),
-    Stock_quantity INTEGER,
-    Reorder_level INTEGER DEFAULT 5,
-    Weight_kg DECIMAL(5,2),
-    PRIMARY KEY (Product_ID)
+CREATE TABLE product (
+    Product_ID INTEGER Not NULL AUTO_INCREMENT,
+    P_name VARCHAR(100) Not NULL,
+    Category VARCHAR(100) Not NULL,
+    Price DECIMAL(10,2) Not NULL,
+    Stock_quantity INTEGER Not NULL DEFAULT 0,
+    Reorder_level INTEGER Not NULL DEFAULT 5,
+    Weight_kg DECIMAL(6,3) NOT NULL,
+    PRIMARY KEY (Product_ID),
+    UNIQUE KEY uq_product_name (P_name),
+    CONSTRAINT chk_product_price  CHECK (Price >= 0),
+    CONSTRAINT chk_product_stock  CHECK (Stock_quantity >= 0),
+    CONSTRAINT chk_product_weight CHECK (Weight_kg >= 0)
 );
 
-CREATE TABLE Shipment (
-    Shipment_ID INTEGER AUTO_INCREMENT,
-    Carrier_ID INTEGER,
-    Tracking_number VARCHAR(50),
-    Ship_date DATE,
+CREATE TABLE shipment (
+    Shipment_ID INTEGER Not NULL AUTO_INCREMENT,
+    Carrier_ID INTEGER Not NULL,
+    Tracking_number VARCHAR(50) Not NULL,
+    Ship_date DATE NOT NULL,
     Shipment_status ENUM('Preparing','In-Transit','Delivered'),
-    Shipping_cost DECIMAL(10,2),
+    Shipping_cost DECIMAL(10,2) Not NULL DEFAULT 0.00,
     PRIMARY KEY (Shipment_ID),
-    FOREIGN KEY (Carrier_ID) REFERENCES Carrier(Carrier_ID)
+    UNIQUE KEY uq_shipment_tracking (Tracking_number),
+    CONSTRAINT fk_shipment_carrier FOREIGN KEY (Carrier_ID) REFERENCES carrier(Carrier_ID),
+    CONSTRAINT chk_shipment_cost CHECK (Shipping_cost >= 0)
 );
 
-CREATE TABLE C_Order (
-    Order_ID INTEGER AUTO_INCREMENT,
-    Customer_ID INTEGER,
+CREATE TABLE c_order (
+    Order_ID INTEGER Not NULL AUTO_INCREMENT,
+    Customer_ID INTEGER Not NULL,
     Shipment_ID INTEGER NULL,
-    Order_status ENUM('Pending','Preparing','In-Transit','Delivered') DEFAULT 'Pending',
-    Total_amount DECIMAL(10,2),
-    Order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Order_status ENUM('Pending','Preparing','In-Transit','Delivered') Not NULL DEFAULT 'Pending',
+    Total_amount DECIMAL(10,2) Not NULL DEFAULT 0.00,
+    Order_date DATETIME Not NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (Order_ID),
-    FOREIGN KEY (Customer_ID) REFERENCES Customer(Customer_ID),
-    FOREIGN KEY (Shipment_ID) REFERENCES Shipment(Shipment_ID)
+    CONSTRAINT fk_order_customer FOREIGN KEY (Customer_ID) REFERENCES customer(Customer_ID),
+    CONSTRAINT fk_order_shipment FOREIGN KEY (Shipment_ID) REFERENCES shipment(Shipment_ID) ON DELETE SET NULL,
+    CONSTRAINT chk_order_total CHECK (Total_amount >= 0)
 );
 
-CREATE TABLE Order_Item (
-    Order_ID INTEGER,
-    Product_ID INTEGER,
-    Quantity INTEGER,
-    Unit_price DECIMAL(10,2),
+CREATE TABLE order_item (
+    Order_ID INTEGER Not NULL,
+    Product_ID INTEGER Not NULL,
+    Quantity INTEGER Not NULL,
+    Unit_price DECIMAL(10,2) Not NULL,
     PRIMARY KEY (Order_ID, Product_ID),
-    FOREIGN KEY (Order_ID) REFERENCES C_Order(Order_ID),
-    FOREIGN KEY (Product_ID) REFERENCES Product(Product_ID)
+    CONSTRAINT fk_item_order   FOREIGN KEY (Order_ID)   REFERENCES c_order(Order_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_item_product FOREIGN KEY (Product_ID) REFERENCES product(Product_ID),
+    CONSTRAINT chk_item_quantity CHECK (Quantity > 0),
+    CONSTRAINT chk_item_price    CHECK (Unit_price >= 0)
 );
 
-INSERT INTO Carrier (Carrier_ID, Carrier_Name, Contact_info, Base_rate, Rate_per_kg) VALUES
+INSERT INTO carrier (Carrier_ID, Carrier_Name, Contact_info, Base_rate, Rate_per_kg) VALUES
 (101,'Frieght Dorman','frieght@dorman.carrier.com', 39.00, 5.00),
 (2,'Unville Croft','unville@croft.carrier.com', 75.00, 18.00),
 (672, 'Hellsborn','Hellsborn@carrier.com',20.00, 12.00);
 
-INSERT INTO Product (Product_ID, P_name, Category, Price, Stock_quantity, Weight_kg) VALUES
+INSERT INTO product (Product_ID, P_name, Category, Price, Stock_quantity, Weight_kg) VALUES
 ( 1,'Wireless Headphones', 'Electronics', 899.99, 24, 0.255),
 ( 2,'Smart Watch','Electronics', 1232.99,3, 0.100),
 ( 3,'Bluetooth Speaker','Electronics',  520.50, 12, 0.300),

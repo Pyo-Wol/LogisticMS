@@ -3,16 +3,26 @@ from datetime import date
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, session, url_for
 from database import get_db_connection
+import mysql.connector
 import re
 
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.getenv("SECRET_KEY", "change-this-in-production")
 
+COMPLETED_STATUSES = ('Delivered',)
+
+REGION_CARRIERS = {
+    "SWEDEN": 2, "NORWAY": 2, "DENMARK": 2,
+    "USA": 672, "MEXICO": 672, "CANADA": 672,
+    "NIGERIA": 101, "SOUTH AFRICA": 101, "EGYPT": 101,
+}
+
 
 @app.route('/')
 def start():
     return render_template('loginOptions.html')
+
 
 @app.route('/admin-login', methods=['GET', 'POST'])
 def adminlogin():
@@ -21,6 +31,7 @@ def adminlogin():
         email = request.form.get('email')
         password = request.form.get('password')
         if email == "admin@gmail.com" and password == "admin123":
+            session.clear()
             session['loggedinAdmin'] = True
             session['id'] = 0
             session['name'] = "Admin"
@@ -44,6 +55,7 @@ def login():
         cursor.close()
         conn.close()
         if account:
+            session.clear()
             session['loggedin'] = True
             session['id'] = account['Customer_ID']
             session['name'] = account['Fname']
@@ -68,16 +80,22 @@ def signup():
             msg = "Account already exists"
         elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             msg = "Invalid email format"
-        elif not name or not password:
+        elif not name.strip() or not password:
             msg = "Please fill all fields"
+        elif address.upper() not in REGION_CARRIERS:
+            msg = "We do not deliver to that country yet"
         else:
-            cursor.execute(
-                "INSERT INTO customer (Fname, Email, Created_date, loginPassword, address) "
-                "VALUES (%s, %s, %s, %s, %s)",
-                (name, email, today_date, password, address)
-            )
-            conn.commit()
-            msg = "Account created successfully"
+            try:
+                cursor.execute(
+                    "INSERT INTO customer (Fname, Email, Created_date, loginPassword, address) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (name, email, today_date, password, address)
+                )
+                conn.commit()
+                msg = "Account created successfully"
+            except mysql.connector.IntegrityError:
+                conn.rollback()
+                msg = "Account already exists"
         cursor.close()
         conn.close()
     return render_template('signup.html', msg=msg)
@@ -89,16 +107,23 @@ def main():
         return redirect('/login')
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT Product_ID, P_name, Price, Stock_quantity FROM product")
+    cursor.execute(
+        "SELECT Product_ID, P_name, Category, Price, Stock_quantity "
+        "FROM product ORDER BY Category, P_name"
+    )
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     stocks = {}
     prices = {}
+    categories = {}
     for row in result:
         stocks[row["P_name"]] = row["Stock_quantity"]
         prices[row["P_name"]] = row["Price"]
-    return render_template('index.html', data=result, stocks=stocks, prices=prices, name=session['name'])
+        categories.setdefault(row["Category"], []).append(row)
+    return render_template('index.html', data=result, stocks=stocks, prices=prices,
+                        categories=categories, name=session['name'])
+
 
 @app.route('/user-page', methods=['GET', 'POST'])
 def user():
@@ -133,7 +158,7 @@ def user():
     ongoing_orders = []
     past_orders = []
     for o in all_orders:
-        if o['status'] in ('Delivered', 'Completed'):
+        if o['status'] in COMPLETED_STATUSES:
             past_orders.append(o)
         else:
             ongoing_orders.append(o)
@@ -181,25 +206,30 @@ def admin():
         conn.close()
         return redirect(url_for('admin'))
     month_start = date.today().strftime("%Y-%m") + "-01"
+    status_placeholders = ", ".join(["%s"] * len(COMPLETED_STATUSES))
     try:
-        cursor.execute("SELECT Product_ID, P_name, Price, Stock_quantity FROM product WHERE Stock_quantity <= 5")
+        cursor.execute(
+            "SELECT Product_ID, P_name, Price, Stock_quantity FROM product "
+            "WHERE Stock_quantity <= Reorder_level"
+        )
         low_stock_products = cursor.fetchall()
         cursor.execute(
             "SELECT COALESCE(SUM(oi.Quantity * oi.Unit_price), 0) AS total "
             "FROM order_item oi JOIN c_order o ON oi.Order_ID = o.Order_ID "
-            "WHERE o.Order_status IN ('Delivered', 'Completed')"
+            "WHERE o.Order_status IN (" + status_placeholders + ")",
+            COMPLETED_STATUSES
         )
         total_profit = cursor.fetchone()['total']
         cursor.execute(
             "SELECT COALESCE(SUM(oi.Unit_price * oi.Quantity), 0) AS total "
             "FROM order_item oi JOIN c_order o ON oi.Order_ID = o.Order_ID "
-            "WHERE o.Order_status IN ('Delivered', 'Completed') AND o.Order_date >= %s",
-            (month_start,)
+            "WHERE o.Order_status IN (" + status_placeholders + ") AND o.Order_date >= %s",
+            COMPLETED_STATUSES + (month_start,)
         )
         total_revenue = cursor.fetchone()['total']
         cursor.execute("SELECT COUNT(*) AS cnt FROM customer WHERE Created_date >= %s", (month_start,))
         new_customers = cursor.fetchone()['cnt']
-        
+
         cursor.execute(
             "SELECT p.Category, SUM(oi.Quantity) AS total "
             "FROM order_item oi JOIN c_order o ON oi.Order_ID = o.Order_ID "
@@ -229,7 +259,7 @@ def admin():
             pct = int(sold / cat_total * 100) if cat_total else 0
             category_charts.setdefault(cat, []).append({'name': name, 'sold': sold, 'pct': pct})
 
-        colors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#ff9f40', '#c9cbcf']
+        colors = ['#C2643C', '#C79A3E', '#7E9968', '#A64B2A', '#B99B6B', '#7B7466']
         total_sold = sum(product_totals.values()) or 0
         pie_pieces = []
         pie_legend = []
@@ -246,11 +276,16 @@ def admin():
             pie_gradient = ','.join(pie_pieces)
         else:
             pie_gradient = colors[-1] + " 0% 100%"
-        carriers_data = {
-            2: {'name': 'Unville Croft', 'countries': 'Sweden · Norway · Denmark', 'shipments': {}},
-            672: {'name': 'Hellsborn', 'countries': 'USA · Mexico · Canada', 'shipments': {}},
-            101: {'name': 'Frieght Dorman','countries': 'Nigeria · South Africa · Egypt', 'shipments': {}},
-        }
+
+        cursor.execute("SELECT Carrier_ID, Carrier_Name FROM carrier ORDER BY Carrier_ID")
+        carriers_data = {}
+        for r in cursor.fetchall():
+            countries = [c.title() for c, cid in REGION_CARRIERS.items() if cid == r['Carrier_ID']]
+            carriers_data[r['Carrier_ID']] = {
+                'name': r['Carrier_Name'],
+                'countries': ' · '.join(sorted(countries)),
+                'shipments': {},
+            }
         cursor.execute(
             "SELECT s.Shipment_ID, s.Carrier_ID, s.Shipment_status, s.Ship_date, "
             " s.Tracking_number, s.Shipping_cost, "
@@ -344,24 +379,10 @@ def update_shipment_status():
         "UPDATE shipment SET Shipment_status = %s WHERE Shipment_ID = %s",
         (new_status, shipment_id)
     )
-    if new_status == 'Preparing':
-        cursor.execute(
-            "UPDATE c_order SET Order_status = 'Preparing' "
-            "WHERE Shipment_ID = %s",
-            (shipment_id,)
-        )
-    elif new_status == 'In-Transit':
-        cursor.execute(
-            "UPDATE c_order SET Order_status = 'In-Transit' "
-            "WHERE Shipment_ID = %s",
-            (shipment_id,)
-        )
-    elif new_status == 'Delivered':
-        cursor.execute(
-            "UPDATE c_order SET Order_status = 'Delivered' "
-            "WHERE Shipment_ID = %s",
-            (shipment_id,)
-        )
+    cursor.execute(
+        "UPDATE c_order SET Order_status = %s WHERE Shipment_ID = %s",
+        (new_status, shipment_id)
+    )
     conn.commit()
     cursor.close()
     conn.close()
@@ -380,7 +401,7 @@ def purchase():
     if not session.get('loggedin'):
         return {"message": "Not logged in"}, 401
 
-    body = request.get_json()
+    body = request.get_json(silent=True)
     if not body:
         return {"message": "Empty request"}, 400
 
@@ -391,36 +412,48 @@ def purchase():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        validated = []
         for item in basket:
-            cursor.execute("SELECT Stock_quantity FROM product WHERE Product_ID = %s", (item['id'],))
-            stock = cursor.fetchone()
-            if not stock or stock[0] < item['quantity']:
-                return {"message": "Insufficient stock for product " + str(item['id'])}, 400
+            try:
+                product_id = int(item['id'])
+                quantity = int(item['quantity'])
+            except (KeyError, TypeError, ValueError):
+                return {"message": "Malformed basket item"}, 400
+            if quantity <= 0:
+                return {"message": "Quantity must be at least 1"}, 400
 
-        cursor.execute("INSERT INTO c_order (Customer_ID, Order_status) VALUES (%s, %s)", (session['id'], 'Pending'))
-        order_id = cursor.lastrowid
-        for item in basket:
             cursor.execute(
-                "INSERT INTO order_item (Order_ID, Product_ID, Quantity, Unit_price) VALUES (%s, %s, %s, %s)",
-                (order_id, item['id'], item['quantity'], item['price'])
+                "SELECT Price, Stock_quantity FROM product WHERE Product_ID = %s",
+                (product_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return {"message": "Unknown product " + str(product_id)}, 400
+            db_price, db_stock = row[0], row[1]
+            if db_stock < quantity:
+                return {"message": "Insufficient stock for product " + str(product_id)}, 400
+            validated.append((product_id, quantity, db_price))
+
+        cursor.execute("INSERT INTO c_order (Customer_ID, Order_status) VALUES (%s, %s)",
+                       (session['id'], 'Pending'))
+        order_id = cursor.lastrowid
+        for product_id, quantity, db_price in validated:
+            cursor.execute(
+                "INSERT INTO order_item (Order_ID, Product_ID, Quantity, Unit_price) "
+                "VALUES (%s, %s, %s, %s)",
+                (order_id, product_id, quantity, db_price)
             )
             cursor.execute(
                 "UPDATE product SET Stock_quantity = Stock_quantity - %s WHERE Product_ID = %s",
-                (item['quantity'], item['id'])
+                (quantity, product_id)
             )
-
 
         cursor.execute("SELECT address FROM customer WHERE Customer_ID = %s", (session['id'],))
         row = cursor.fetchone()
-        country = row[0].upper() if row else ""
+        country = row[0].upper() if row and row[0] else ""
         cursor.execute("SELECT calc_shipping_cost(%s, %s)", (country, order_id))
         shipping_cost = cursor.fetchone()[0] or 0
 
-        REGION_CARRIERS = {
-            "SWEDEN": 2, "NORWAY": 2, "DENMARK": 2,
-            "USA": 672, "MEXICO": 672, "CANADA": 672,
-            "NIGERIA": 101, "SOUTH AFRICA": 101, "EGYPT": 101,
-        }
         carrier_id = REGION_CARRIERS.get(country)
 
         if carrier_id:
@@ -434,6 +467,11 @@ def purchase():
 
             if existing:
                 shipment_id = existing[0]
+                cursor.execute(
+                    "UPDATE shipment SET Shipping_cost = Shipping_cost + %s "
+                    "WHERE Shipment_ID = %s",
+                    (float(shipping_cost), shipment_id)
+                )
             else:
                 tracking_number = os.urandom(6).hex().upper()
                 cursor.execute(
@@ -464,7 +502,10 @@ def delete_account():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("DELETE FROM order_item WHERE Order_ID IN (SELECT Order_ID FROM c_order WHERE Customer_ID = %s)", (session['id'],))
+        cursor.execute("SELECT Order_ID FROM c_order WHERE Customer_ID = %s", (session['id'],))
+        order_ids = [row[0] for row in cursor.fetchall()]
+        for order_id in order_ids:
+            cursor.execute("DELETE FROM order_item WHERE Order_ID = %s", (order_id,))
         cursor.execute("UPDATE c_order SET Shipment_ID = NULL WHERE Customer_ID = %s", (session['id'],))
         cursor.execute("DELETE FROM c_order WHERE Customer_ID = %s", (session['id'],))
         cursor.execute("DELETE FROM customer WHERE Customer_ID = %s", (session['id'],))
