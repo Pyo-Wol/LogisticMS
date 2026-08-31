@@ -12,7 +12,7 @@ Course project for DV1703 (Databasteknik), Blekinge Institute of Technology.
 
 - [What it does](#what-it-does)
 - [Tech stack](#tech-stack)
-- [Setup](#setup)
+- [Installation](#installation)
 - [Database design](#database-design)
 - [Key SQL](#key-sql)
 - [Project structure](#project-structure)
@@ -63,7 +63,7 @@ These figures are invented, but sit in roughly the same range as real freight pr
 
 ---
 
-## Setup
+## Installation
 
 ### 1. Requirements
 
